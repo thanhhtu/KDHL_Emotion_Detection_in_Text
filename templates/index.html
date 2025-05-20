@@ -34,7 +34,7 @@
             color: var(--text-color);
             line-height: 1.6;
         }
-
+        
         textarea {
             font-family: 'Roboto', sans-serif;
             text-decoration: none;
@@ -60,6 +60,7 @@
         .app-subtitle {
             color: #666;
             font-weight: normal;
+            font-size: 1.8rem;
         }
 
         .card {
@@ -92,7 +93,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            font-size: 1.1rem;
+            font-size: 1.1rem; 
         }
 
         .form-control {
@@ -116,17 +117,17 @@
 
         .input-group {
             display: flex;
-            gap: 10px;
+            gap: 10px; 
             align-items: flex-end;
         }
 
         .select-wrapper {
             position: relative;
-            flex: 1;
+            width: 50%;
         }
 
-        .select-wrapper::after {
-            content: '\f078';
+        .select-wrapper::after { 
+            content: '\f078'; 
             font-family: 'Font Awesome 6 Free';
             font-weight: 900;
             position: absolute;
@@ -160,7 +161,6 @@
         .btn-primary {
             background-color: var(--primary-color);
             color: white;
-            flex: 1;
         }
 
         .btn-primary:hover {
@@ -184,7 +184,7 @@
         .result-item {
             background-color: var(--light-bg);
             border-radius: var(--border-radius);
-            padding: 15px;
+            padding: 15px 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             transition: var(--transition);
             border-left: 5px solid #ccc;
@@ -194,7 +194,7 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
+        
         .result-item.positive { border-left-color: var(--positive-color); }
         .result-item.negative { border-left-color: var(--negative-color); }
         .result-item.neutral { border-left-color: var(--neutral-color); }
@@ -205,23 +205,33 @@
             word-break: break-word;
         }
 
-        .result-detail {
-            margin-bottom: 5px;
-            font-size: 0.95rem;
+        .result-text strong {
+            color: #555;
         }
 
-        .result-detail-label {
+        .result-detail {
+            margin-bottom: 5px;
+            font-size: 0.9rem; 
+            color: #444;
+        }
+        .result-detail strong {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .result-meta-info { 
             display: flex;
-            align-items: center;
-            justify-content: flex-start;
+            flex-wrap: wrap;
             gap: 10px;
+            align-items: center;
+            margin-top: 10px;
         }
 
         .result-sentiment {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 3px 10px;
+            padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 500;
@@ -243,50 +253,86 @@
         }
 
         .model-badge {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 3px 10px;
+            padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.8rem;
             background-color: #e3e8f0;
             color: #637381;
         }
+        
+        .confidence-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed #ddd;
+        }
+        .confidence-section .result-detail {
+            font-size: 0.9rem;
+        }
+        .confidence-section strong {
+             font-weight: 500;
+        }
+        .confidence-section .max-confidence-value {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .confidence-section ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 5px;
+        }
+        .confidence-section li {
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        .confidence-section li .predicted-class-confidence {
+            font-weight: bold;
+        }
 
         .error-message {
             color: var(--negative-color);
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .empty-state {
             text-align: center;
-            padding: 30px;
-            color: #666;
+            padding: 40px 20px;
+            color: #777;
         }
 
         .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: #ddd;
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #ccc; 
         }
 
         @media (max-width: 768px) {
             .container {
                 margin: 20px auto;
             }
-            
             .app-title {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
-            
-            .form-group {
-                margin-bottom: 15px;
+
+            .card-header {
+                font-size: 1.2rem;
             }
-            
             .input-group {
                 flex-direction: column;
+                gap: 15px;
             }
-            
+             .select-wrapper::after {
+                top: 70%; 
+            }
+            .button-wrapper {
+                 margin-top: 0;
+            }
             .btn {
                 width: 100%;
             }
@@ -302,8 +348,8 @@
 
         <div class="card">
             <div class="card-header">
-                <i class="fas fa-edit"></i> 
-                <p>Nhập văn bản cần phân tích</p>
+                <i class="fas fa-edit"></i>
+                <span>Nhập văn bản cần phân tích</span>
             </div>
             <div class="card-body">
                 <form method="POST" action="/">
@@ -321,10 +367,10 @@
                                     <option value="lr" {% if selected_model == 'lr' %}selected{% endif %}>Logistic Regression</option>
                                 </select>
                             </div>
-                            <div style="flex: 1; margin-top: 27px;">
+                            <div class="button-wrapper">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-search"></i> 
-                                    <p>Phân tích</p>
+                                    <span>Phân tích</span>
                                 </button>
                             </div>
                         </div>
@@ -337,13 +383,13 @@
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-chart-bar"></i> 
-                    <p>Kết quả phân tích</p>
+                    <span>Kết quả phân tích</span>
                 </div>
                 <div class="card-body">
                     {% if predictions %}
                         <div class="result-list">
                             {% for item in predictions %}
-                                {% set sentiment_class = 'neutral' %} {# Default class #}
+                                {% set sentiment_class = 'neutral' %} 
                                 {% set sentiment_badge_class = 'sentiment-neutral' %}
                                 {% set sentiment_icon = 'fa-meh' %}
                                 
@@ -366,28 +412,74 @@
                                     {% if item.error %}
                                         <p class="error-message">
                                             <i class="fas fa-exclamation-triangle"></i> 
-                                            {{ item.error }}
+                                            <span>{{ item.error }}</span>
                                         </p>
                                     {% else %}
-                                        <p class="result-detail"><strong>Văn bản đã làm sạch:</strong> {{ item.cleaned_text_for_model }}</p>
-                                        <div class="result-detail result-detail-label">
+                                        <p class="result-detail"><strong>Văn bản đã làm sạch:</strong> 
+                                            <em>{{ item.cleaned_text_for_model if item.cleaned_text_for_model else "(Văn bản trống sau khi làm sạch)" }}</em>
+                                        </p>
+                                        
+                                        <div class="result-meta-info">
                                             <span class="result-sentiment {{ sentiment_badge_class }}">
                                                 <i class="far {{ sentiment_icon }}"></i> 
-                                                <p>{{ item.sentiment }}</p>
+                                                <span>{{ item.sentiment }}</span>
                                             </span>
                                             <span class="model-badge">
                                                 <i class="fas fa-robot"></i>
-                                                <p>
+                                                <span>
                                                     {% if item.model_used == 'lr' %}
                                                         Logistic Regression
                                                     {% elif item.model_used == 'svc' %}
                                                         LinearSVC
                                                     {% else %}
-                                                        {{ item.model_used }}
+                                                        {{ item.model_used | upper }}
                                                     {% endif %}
-                                                </p>
+                                                </span>
                                             </span>
                                         </div>
+
+                                        {% if item.confidence is defined %}
+                                        <div class="confidence-section">
+                                            <p class="result-detail">
+                                                <i class="fas fa-shield-alt" style="margin-right: 5px; color: var(--primary-color);"></i>
+                                                <strong>Độ tin cậy (Cao nhất):</strong> 
+                                                <span class="max-confidence-value">
+                                                    {{ "%.2f%%"|format(item.confidence * 100) }}
+                                                </span>
+                                            </p>
+                                            
+                                            {% set label_map = {0: "Tiêu cực", 1: "Trung tính", 2: "Tích cực"} %}
+                                            <p class="result-detail" style="margin-top: 8px;">
+                                                <em>Phân bổ độ tin cậy theo nhãn:</em>
+                                                <ul>
+                                                    {% if item.confidence_class_0 is defined %}
+                                                    <li>
+                                                        {{ label_map.get(0, "Lớp 0") }}: 
+                                                        <span class="{{ 'predicted-class-confidence' if item.predicted_label == 0 else '' }}">
+                                                            {{ "%.2f%%"|format(item.confidence_class_0 * 100) }}
+                                                        </span>
+                                                    </li>
+                                                    {% endif %}
+                                                    {% if item.confidence_class_1 is defined %}
+                                                    <li>
+                                                        {{ label_map.get(1, "Lớp 1") }}: 
+                                                        <span class="{{ 'predicted-class-confidence' if item.predicted_label == 1 else '' }}">
+                                                            {{ "%.2f%%"|format(item.confidence_class_1 * 100) }}
+                                                        </span>
+                                                    </li>
+                                                    {% endif %}
+                                                    {% if item.confidence_class_2 is defined %}
+                                                    <li>
+                                                        {{ label_map.get(2, "Lớp 2") }}: 
+                                                        <span class="{{ 'predicted-class-confidence' if item.predicted_label == 2 else '' }}">
+                                                            {{ "%.2f%%"|format(item.confidence_class_2 * 100) }}
+                                                        </span>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </p>
+                                        </div>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             {% endfor %}
@@ -406,21 +498,17 @@
     </div>
     
     <script>
-        // Thêm hiệu ứng khi nhấn vào input
-        document.querySelectorAll('.form-control').forEach(element => {
-            element.addEventListener('focus', () => {
-                element.closest('.form-group').classList.add('focused');
-            });
-            
-            element.addEventListener('blur', () => {
-                if (!element.value) {
-                    element.closest('.form-group').classList.remove('focused');
+        document.addEventListener('DOMContentLoaded', function () {
+            // Persist selected model if page reloads or form is submitted
+            const modelSelect = document.getElementById('model_type');
+            if (modelSelect) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const modelFromQuery = urlParams.get('model_type');
+                if (modelFromQuery) {
+                    modelSelect.value = modelFromQuery;
+                } else {
+                    // Fallback to selected_model from Flask if POST
                 }
-            });
-            
-            // Check initial state
-            if (element.value) {
-                element.closest('.form-group').classList.add('focused');
             }
         });
     </script>

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-import predict_logic # Import your prediction logic module
+import predict_logic # This will run initialize_models() from predict_logic.py
 import os
 
 app = Flask(__name__)
@@ -35,6 +35,8 @@ def index():
 if __name__ == '__main__':
     if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')):
         print("LỖI: Thư mục 'templates' không được tìm thấy. Hãy tạo nó và đặt 'index.html' vào trong.")
+    elif not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'predict_logic.py')):
+        print("LỖI: File 'predict_logic.py' không được tìm thấy trong cùng thư mục với 'app.py'.")
     else:
         # Chạy server ở chế độ debug để dễ dàng theo dõi lỗi
         # Chỉ sử dụng host='0.0.0.0' nếu bạn muốn truy cập từ máy khác trong mạng

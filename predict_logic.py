@@ -1,6 +1,7 @@
 import joblib
 import re
 import os
+import numpy as np
 
 # --- CẤU HÌNH ĐƯỜNG DẪN ĐẾN CÁC FILE ĐÃ LƯU ---
 try:
@@ -37,7 +38,6 @@ VIETNAMESE_CHARS_FOR_PREDICTION = "a-zA-Z0-9àáạảãâầấậẩẫăằ�
 ALLOWED_PUNCTUATION_FOR_PREDICTION = r".,?!:;()\[\]{}"
 
 def clean_text_for_prediction_advanced(raw_text):
-    # ... (Hàm làm sạch giữ nguyên như bạn đã định nghĩa ở trên) ...
     if not isinstance(raw_text, str):
         try: return str(raw_text)
         except: return ""
@@ -111,6 +111,57 @@ def initialize_models():
 # Gọi hàm tải mô hình ngay khi script được import hoặc chạy
 initialize_models()
 
+def get_confidence_scores(model, features, model_type='svc'):
+    confidence_data = []
+    
+    # Lấy ra các lớp từ mô hình
+    classes = model.classes_
+    
+    if model_type == 'lr':
+        # LogisticRegression có sẵn predict_proba
+        probabilities = model.predict_proba(features)
+        
+        for prob_vector in probabilities:
+            confidence_dict = {f"confidence_class_{int(cls)}": float(prob) for cls, prob in zip(classes, prob_vector)}
+            confidence_dict["max_confidence"] = float(np.max(prob_vector))
+            confidence_dict["max_confidence_class"] = int(classes[np.argmax(prob_vector)])
+            confidence_data.append(confidence_dict)
+            
+    elif model_type == 'svc':
+        # LinearSVC sử dụng decision_function
+        if len(classes) == 2:  # Trường hợp nhị phân
+            decision_values = model.decision_function(features)
+            decision_values = decision_values.reshape(-1, 1)  # Reshape để phù hợp với cấu trúc
+            
+            # Với nhị phân, giá trị dương là class 1, âm là class 0
+            # Ta cần chuyển đổi thành "giả-xác suất" bằng phương pháp sigmoid
+            positive_class_values = 1 / (1 + np.exp(-decision_values))
+            negative_class_values = 1 - positive_class_values
+            
+            for pos_val, neg_val in zip(positive_class_values, negative_class_values):
+                probs = [float(neg_val[0]), float(pos_val[0])]
+                confidence_dict = {f"confidence_class_{int(cls)}": prob for cls, prob in zip(classes, probs)}
+                confidence_dict["max_confidence"] = float(max(probs))
+                confidence_dict["max_confidence_class"] = int(classes[np.argmax(probs)])
+                confidence_data.append(confidence_dict)
+        else:  # Trường hợp đa lớp
+            # LinearSVC đa lớp: decision_function trả về ma trận với mỗi lớp một cột
+            decision_values = model.decision_function(features)
+            
+            # Chuyển decision values thành "giả-xác suất" bằng softmax
+            def softmax(x):
+                e_x = np.exp(x - np.max(x, axis=1, keepdims=True))
+                return e_x / e_x.sum(axis=1, keepdims=True)
+            
+            probabilities = softmax(decision_values)
+            
+            for prob_vector in probabilities:
+                confidence_dict = {f"confidence_class_{int(cls)}": float(prob) for cls, prob in zip(classes, prob_vector)}
+                confidence_dict["max_confidence"] = float(np.max(prob_vector))
+                confidence_dict["max_confidence_class"] = int(classes[np.argmax(prob_vector)])
+                confidence_data.append(confidence_dict)
+    
+    return confidence_data
 
 # --- HÀM DỰ ĐOÁN ---
 def predict_sentiment(text_list_input, model_type='svc'): # Thêm model_type, mặc định là 'svc'
@@ -118,6 +169,8 @@ def predict_sentiment(text_list_input, model_type='svc'): # Thêm model_type, m�
     Dự đoán cảm xúc cho một danh sách các văn bản thô.
     Sử dụng các model và vectorizer đã được tải toàn cục.
     model_type: 'svc' hoặc 'lr' để chọn mô hình.
+    
+    Bổ sung thông tin confidence (độ tin cậy) vào kết quả.
     """
     if not models_loaded:
         print("Lỗi: Các thành phần mô hình chưa được tải thành công. Gọi initialize_models() trước.")
@@ -159,6 +212,9 @@ def predict_sentiment(text_list_input, model_type='svc'): # Thêm model_type, m�
             
     predictions = active_model.predict(input_features)
     
+    # Lấy thông tin confidence scores
+    confidence_data = get_confidence_scores(active_model, input_features, model_type)
+    
     # Giả sử 3 nhãn: 0 (tiêu cực), 1 (trung tính), 2 (tích cực)
     label_map = {
         0: "Tiêu cực",
@@ -169,14 +225,27 @@ def predict_sentiment(text_list_input, model_type='svc'): # Thêm model_type, m�
     results = []
     for i, pred_label in enumerate(predictions):
         sentiment = label_map.get(pred_label, f"Không xác định (Nhãn {pred_label})")
-        results.append({
+        result_dict = {
             "original_text": text_list_input[i],
             "cleaned_text_for_model": cleaned_text_list[i],
-            "predicted_label": pred_label,
+            "predicted_label": int(pred_label),
             "sentiment": sentiment,
-            "model_used": model_type if active_model else "N/A"
-        })
+            "model_used": model_type
+        }
+        
+        # Thêm thông tin confidence
+        if confidence_data:
+            # Thêm giá trị confidence của từng class
+            for class_key, confidence_val in confidence_data[i].items():
+                result_dict[class_key] = confidence_val
+            
+            # Thêm thông tin max confidence
+            result_dict["confidence"] = confidence_data[i]["max_confidence"]
+        
+        results.append(result_dict)
+    
     return results
+
 
 # # --- SỬ DỤNG TRONG FILE KHÁC ---
 # if __name__ == "__main__":
@@ -192,12 +261,14 @@ def predict_sentiment(text_list_input, model_type='svc'): # Thêm model_type, m�
 #         for item in predictions_s:
 #             print(f"Văn bản: '{item['original_text']}'")
 #             print(f"  -> Dự đoán (SVC): {item['sentiment']} (Nhãn: {item['predicted_label']})\n")
-            
+#             print(f"  -> Độ tin cậy: {item.get('confidence', 'N/A'):.4f}")
+
 #         print("\n**Dự đoán bằng Logistic Regression:**")
 #         predictions_l = predict_sentiment(sample_comments, model_type='lr')
 #         for item in predictions_l:
 #             print(f"Văn bản: '{item['original_text']}'")
 #             print(f"  -> Dự đoán (LR): {item['sentiment']} (Nhãn: {item['predicted_label']})\n")
+#             print(f"  -> Độ tin cậy: {item.get('confidence', 'N/A'):.4f}")
 
 #         # Ví dụ dự đoán một câu đơn với mô hình mặc định (SVC)
 #         single_comment = "Hôm nay trời đẹp tuyệt vời luôn đó mn"
